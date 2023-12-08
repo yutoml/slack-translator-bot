@@ -1,0 +1,86 @@
+{
+    "automatic_translation_setting": {
+        "user": "JA"
+    },
+    "modal_view": {
+        "type": "modal",
+        "callback_id": "modal-id",
+        "title": {
+            "type": "plain_text",
+            "text": "Automatic Translation Setting"
+        },
+        "submit": {
+            "type": "plain_text",
+            "text": "送信"
+        },
+        "close": {
+            "type": "plain_text",
+            "text": "キャンセル"
+        },
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "Select a *User* and *Languages*. If the *User* is mentions, bot will automatically perform a translation into the *Language*."
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*User*?"
+                },
+                "block_id": "user_select",
+                "accessory": {
+                    "type": "users_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Select a user",
+                        "emoji": true
+                    },
+                    "action_id": "user_select-action"
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "languages_select",
+                "element": {
+                    "type": "checkboxes",
+                    "options": [
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Japanese",
+                                "emoji": true
+                            },
+                            "value": "jp"
+                        },
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "English",
+                                "emoji": true
+                            },
+                            "value": "us"
+                        },
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Chinese",
+                                "emoji": true
+                            },
+                            "value": "cn"
+                        }
+                    ],
+                    "action_id": "languages-select-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Language",
+                    "emoji": true
+                }
+            }
+        ]
+    }
+}
