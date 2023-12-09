@@ -147,6 +147,11 @@ def log_request(logger, body, next):
     return next()
 
 
+@app.event("app_mention")  # ほぼテスト用
+def say_hello(message, say):
+    say(f"こんにちは <@{message['user']}> さん！")
+
+
 @app.event("reaction_added")
 def translate_reacted_text(event, say: Say):
 
@@ -210,8 +215,8 @@ def handle_view_submission(ack, view, logger):
 
 # ある特定のメンションに対して翻訳を実行する
 @app.message(auto_translation_config.mention_pattern)
-def auto_translate(message, say):
-    logging.debug(
+def auto_translate(message, say, logger):
+    logger.debug(
         f"mention detected. pattern = {auto_translation_config.mention_pattern}")
     target_langs = []
     mentioned_userIDs = [userID for userID in auto_translation_config.param if re.search(
@@ -225,11 +230,6 @@ def auto_translate(message, say):
     target_langs = list(set(target_langs))
 
     translate_and_reply(message=message, say=say, target_langs=target_langs)
-
-
-@app.message("こんにちは")  # ほぼテスト用
-def say_hello(message, say):
-    say(f"こんにちは <@{message['user']}> さん！")
 
 
 if __name__ == "__main__":
