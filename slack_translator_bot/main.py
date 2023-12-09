@@ -168,6 +168,13 @@ def say_hello(message, say):
     say(f"こんにちは <@{message['user']}> さん！")
 
 
+@app.event("message")
+def message_event(event, message, say, logger):
+    # ある特定のメンションに対して翻訳を実行する
+    if re.search(auto_translation_config.mention_pattern, message["text"]):
+        auto_translate(message, say, logger)
+
+
 @app.event("reaction_added")
 def translate_reacted_text(event, say: Say):
 
@@ -230,7 +237,6 @@ def handle_view_submission(ack, view, logger):
 
 
 # ある特定のメンションに対して翻訳を実行する
-@app.message(auto_translation_config.mention_pattern)
 def auto_translate(message, say, logger):
     logger.debug(
         f"mention detected. pattern = {auto_translation_config.mention_pattern}")
