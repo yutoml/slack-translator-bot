@@ -11,7 +11,7 @@ Slack上でdeeplのapiを利用して翻訳をおこなうbot.
 
 ## 実行方法
 
-* dockerfileからimageを作成し、このディレクトリを/appにマウントして実行する
+* dockerfileからimageを作成し、dataディレクトリを/app/dataにマウントして実行する
 
 ```sh
 docker build . -t slacktranslatorbot
