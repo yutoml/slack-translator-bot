@@ -60,4 +60,5 @@ docker run -it --volume $PWD/data/:/app/data slacktranslatorbot
 
 ## 設定方法
 
-dataディレクトリ含まれるlanguage_config.jsonで言語とreactionとdeeplで使用される言語コードがセットになって保存されている。これを編集することで対応する言語を増やせる
+templateにあるlanguage_config.jsonをdataディレクトリにコピーして言語とreactionとdeeplで使用される言語コードのセットを変更することで対応する言語を増やしたり、変更したりできる
+モーダルやmentionの挙動もtemplateにあるjsonファイルをdataディレクトリにコピーして編集することで挙動を変えることができる
