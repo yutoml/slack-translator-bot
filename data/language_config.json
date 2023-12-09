@@ -1,0 +1,19 @@
+{
+    "languages": [
+        {
+            "code": "JA",
+            "reaction": "jp",
+            "language": "Japanese"
+        },
+        {
+            "code": "EN-US",
+            "reaction": "us",
+            "language": "American English"
+        },
+        {
+            "code": "ZH",
+            "reaction": "cn",
+            "language": "Chinese"
+        }
+    ]
+}

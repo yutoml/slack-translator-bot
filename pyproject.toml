@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "slack_translator_bot"
+version = "0.1.0"
+description = "slack bot for traslating messages"
+authors = ["yutoml <yutomlnl39@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+deepl = "^1.16.1"
+slack-bolt = "^1.18.1"
+
+[tool.poetry.scripts]
+start = "slack_translator_bot.main:__main__"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

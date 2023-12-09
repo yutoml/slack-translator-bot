@@ -1,13 +1,10 @@
 {
-    "automatic_translation_setting": {
-        "user": "JA"
-    },
-    "modal_view": {
+    "auto_translation_config_modal_view": {
         "type": "modal",
-        "callback_id": "modal-id",
+        "callback_id": "auto_translation_config",
         "title": {
             "type": "plain_text",
-            "text": "Automatic Translation Setting"
+            "text": "Auto Translation Setting"
         },
         "submit": {
             "type": "plain_text",
@@ -54,7 +51,7 @@
                                 "text": "Japanese",
                                 "emoji": true
                             },
-                            "value": "jp"
+                            "value": "JA"
                         },
                         {
                             "text": {
@@ -62,7 +59,7 @@
                                 "text": "English",
                                 "emoji": true
                             },
-                            "value": "us"
+                            "value": "EN-US"
                         },
                         {
                             "text": {
@@ -70,7 +67,7 @@
                                 "text": "Chinese",
                                 "emoji": true
                             },
-                            "value": "cn"
+                            "value": "ZH"
                         }
                     ],
                     "action_id": "languages-select-action"
@@ -79,6 +76,27 @@
                     "type": "plain_text",
                     "text": "Language",
                     "emoji": true
+                }
+            }
+        ]
+    },
+    "error_modal_view": {
+        "type": "modal",
+        "callback_id": "error_modal",
+        "title": {
+            "type": "plain_text",
+            "text": "Error"
+        },
+        "close": {
+            "type": "plain_text",
+            "text": "閉じる"
+        },
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Error"
                 }
             }
         ]
