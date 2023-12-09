@@ -16,6 +16,35 @@ Slack上でdeeplのapiを利用して翻訳をおこなうbot.
 
 ## 実行方法
 
+* slack apiからappを作成する
+  * socket modeを有効化する
+    ![Alt text](images/image-4.png)
+  * Features -> OAuth & Permissions -> Scopes -> Bot Token Scopesから以下の権限を有効化する
+    * channels:history
+    * chat:write
+    * commands
+    * im:history
+    * im:read
+    * im:write
+    * reactions:read
+  * 以下の図のようにEventへの反応を有効化する
+  ![Alt text](images/image-5.png)
+  * ショートカットを作成する.
+    * Globalショートカットを選択し、callback_idは"automatic_translate_setting"とする
+    ![Alt text](images/image-6.png)
+  * Install Appを選択してBotのトークンを発行する
+* deepl apiのトークンも発行する
+* .envファイルをDockerfileと同じ階層に作成し、以下のように書き込む
+
+```.env
+# Token for Slack Bot
+SLACK_BOT_TOKEN = "xoxb-~"
+# Token for Slack API WebSocket
+SLACK_APP_TOKEN = "xapp-~"
+# Token for deepl
+DEEPL_API_TOKEN = "~"
+```
+
 * dockerfileからimageを作成し、dataディレクトリを/app/dataにマウントして実行する
 
 ```sh
