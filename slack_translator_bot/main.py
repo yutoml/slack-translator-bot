@@ -22,16 +22,19 @@ translator = deepl.Translator(DEEPL_API_TOKEN)
 
 logging.basicConfig(level=logging.DEBUG)
 
+date_dir = os.path.join(os.path.dirname(__file__), "data")
+template_dir = os.path.join(os.path.dirname(__file__), "template")
+
 
 class StaticData():
     """もとのファイルを編集しないようなデータを取り扱うクラス"""
 
-    def __init__(self, path: str) -> None:
-        self.path: str = path
+    def __init__(self, source_path: str) -> None:
+        self.source_path: str = source_path
         self.param: dict = self.read()
 
     def read(self) -> dict:
-        with open(self.path, mode="r") as file:
+        with open(self.source_path, mode="r") as file:
             param: dict = json.load(file)
         return param
 
@@ -39,18 +42,23 @@ class StaticData():
 class Data(StaticData):
     """もとのファイルを編集する可能性があるデータを取り扱うクラス"""
 
-    def __init__(self, path: str) -> None:
-        super().__init__(path)
+    def __init__(self, source_path: str, export_path: str) -> None:
+        self.export_path = export_path
+        super().__init__(source_path)
 
     def write(self):
         """もとのファイルを上書き"""
-        with open(self.path, mode="w") as file:
+        with open(self.export_path, mode="w") as file:
             json.dump(self.param, file)
 
 
 class LanguageConfig(StaticData):
-    def __init__(self, path: str) -> None:
-        super().__init__(path)
+    def __init__(self) -> None:
+        if os.path.isfile(os.path.join(date_dir, "language_config.json")):
+            source_path = os.path.join(date_dir, "language_config.json")
+        else:
+            source_path = os.path.join(template_dir, "language_config.json")
+        super().__init__(source_path)
 
     @property
     def reaction_to_language(self) -> dict[str, str]:
@@ -64,9 +72,13 @@ class LanguageConfig(StaticData):
 
 
 class Modal(StaticData):
-    def __init__(self, path: str, language_config: LanguageConfig) -> None:
+    def __init__(self, language_config: LanguageConfig) -> None:
         self.language_config: LanguageConfig = language_config
-        super().__init__(path)
+        if os.path.isfile(os.path.join(date_dir, "modal.json")):
+            source_path = os.path.join(date_dir, "modal.json")
+        else:
+            source_path = os.path.join(template_dir, "modal.json")
+        super().__init__(source_path)
 
     def get_option(self, config):
         return {"text": {"type": "plain_text", "text": config["language"], "emoji": True}, "value": config["code"]}
@@ -87,8 +99,15 @@ class Modal(StaticData):
 
 
 class AutoTranslationConfig(Data):
-    def __init__(self, path) -> None:
-        super().__init__(path)
+    def __init__(self) -> None:
+        export_path = os.path.join(date_dir, "auto_translation_config.json")
+        if os.path.isfile(os.path.join(date_dir, "auto_translation_config.json")):
+            source_path = os.path.join(
+                date_dir, "auto_translation_config.json")
+        else:
+            source_path = os.path.join(
+                template_dir, "auto_translation_config.json")
+        super().__init__(source_path, export_path)
 
     @property
     def mention_pattern(self) -> re.Pattern:
@@ -104,12 +123,9 @@ class AutoTranslationConfig(Data):
         return re.compile(pattern=pattern)
 
 
-language_config = LanguageConfig(os.path.join(os.path.dirname(
-    os.path.dirname(__file__)), "data", "language_config.json"))
-modal = Modal(os.path.join(os.path.dirname(
-    os.path.dirname(__file__)), "data", "modal.json"), language_config=language_config)
-auto_translation_config = AutoTranslationConfig(os.path.join(os.path.dirname(
-    os.path.dirname(__file__)), "data", "auto_translation_config.json"))
+language_config = LanguageConfig()
+modal = Modal(language_config)
+auto_translation_config = AutoTranslationConfig()
 
 
 def translate_and_reply(message: dict, say: Say, target_langs: str | list[str]):
