@@ -14,6 +14,10 @@ Slack上でdeeplのapiを利用して翻訳をおこなうbot.
 
 ![Alt text](images/image-1.png)
 
+* Messageについている三点リーダからショートカット"Translate"を選択し、翻訳先の言語を選ぶと、操作者にしか見えないMessageで翻訳が見れる
+
+![Alt text](images/image-7.png)
+
 ## 実行方法
 
 * slack apiからappを作成する
@@ -62,3 +66,9 @@ docker run -it --volume $PWD/data/:/app/data slacktranslatorbot
 
 templateにあるlanguage_config.jsonをdataディレクトリにコピーして言語とreactionとdeeplで使用される言語コードのセットを変更することで対応する言語を増やしたり、変更したりできる
 モーダルやmentionの挙動もtemplateにあるjsonファイルをdataディレクトリにコピーして編集することで挙動を変えることができる
+
+## TODO
+
+* 用語集の対応(主にUIにおいて問題が存在)
+* 翻訳先と翻訳対象の人物のみならず翻訳元のメッセージを作成した人物も参照することによる翻訳機能の改善
+* Tokenの残量や設定状態などを確認できるインターフェースの実装
