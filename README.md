@@ -8,21 +8,14 @@ Slack上でdeeplのapiを利用して翻訳をおこなうbot.
 
 * 特定の人物にメンションしているメッセージをメンションされた人物にとって適切な言語で翻訳
 
-![Alt text](/images/image.png)
-
 * 特定のリアクションがついたメッセージにそのリアクションで指定される言語で翻訳
 
-![Alt text](images/image-1.png)
-
 * Messageについている三点リーダからショートカット"Translate"を選択し、翻訳先の言語を選ぶと、操作者にしか見えないMessageで翻訳が見れる
-
-![Alt text](images/image-7.png)
 
 ## 実行方法
 
 * slack apiからappを作成する
   * socket modeを有効化する
-    ![Alt text](images/image-4.png)
   * Features -> OAuth & Permissions -> Scopes -> Bot Token Scopesから以下の権限を有効化する
     * channels:history
     * chat:write
@@ -31,11 +24,9 @@ Slack上でdeeplのapiを利用して翻訳をおこなうbot.
     * im:read
     * im:write
     * reactions:read
-  * 以下の図のようにEventへの反応を有効化する
-  ![Alt text](images/image-5.png)
+  * Eventへの反応を有効化する
   * ショートカットを作成する.
     * Globalショートカットを選択し、callback_idは"automatic_translate_setting"とする
-    ![Alt text](images/image-6.png)
   * Install Appを選択してBotのトークンを発行する
 * deepl apiのトークンも発行する
 * .envファイルをDockerfileと同じ階層に作成し、以下のように書き込む
@@ -57,10 +48,6 @@ docker run -it --volume $PWD/data/:/app/data slacktranslatorbot
 ```
 
 * メンションされた場合に自動的な翻訳を実行するには、あらかじめ検索タブから"Auto Translation Setting"を選択して、メンション対象の人物と翻訳先の言語を選択する必要がある
-
-![Alt text](images/image-2.png)
-
-![Alt text](images/image-3.png)
 
 ## 設定方法
 
