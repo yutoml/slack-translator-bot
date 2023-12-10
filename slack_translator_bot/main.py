@@ -3,7 +3,7 @@ from slack_bolt import Say
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk import WebClient
 
-import deepl
+from deepl.translator import Translator
 
 import re
 import os
@@ -18,12 +18,13 @@ SLACK_APP_TOKEN = os.environ["SLACK_APP_TOKEN"]
 DEEPL_API_TOKEN = os.environ["DEEPL_API_TOKEN"]
 app = App(token=SLACK_BOT_TOKEN)
 
-translator = deepl.Translator(DEEPL_API_TOKEN)
+translator = Translator(DEEPL_API_TOKEN)
 
 logging.basicConfig(level=logging.DEBUG)
 
-date_dir = os.path.join(os.path.dirname(__file__), "data")
-template_dir = os.path.join(os.path.dirname(__file__), "template")
+date_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+template_dir = os.path.join(os.path.dirname(
+    os.path.dirname(__file__)), "templates")
 
 
 class StaticData():
@@ -84,7 +85,7 @@ class Modal(StaticData):
         return {"text": {"type": "plain_text", "text": config["language"], "emoji": True}, "value": config["code"]}
 
     @property
-    def auto_translation_config_modal_view(self):
+    def auto_translation_config_modal_view(self) -> dict:
         """modalのviewを対応言語に合うように変更する"""
         new_options = [self.get_option(
             config) for config in self.language_config.param["languages"]]
@@ -96,6 +97,22 @@ class Modal(StaticData):
             text = "Error has occur"
         self.param["error_modal_view"]["blocks"][0]["text"]["text"] = text
         return self.param["error_modal_view"]
+
+    @property
+    def translate_ephemeral_modal_view(self) -> dict:
+        """翻訳先の言語を選択させるmodal_view
+
+        Returns
+        -------
+        dict
+            表示するmodal_view
+        """
+        new_options = [self.get_option(
+            config) for config in self.language_config.param["languages"]]
+        self.param["translate_ephemeral_modal_view"]["blocks"][0]["element"]["options"] = new_options
+        logging.debug(
+            f'new_modal = {self.param["translate_ephemeral_modal_view"]}')
+        return self.param["translate_ephemeral_modal_view"]
 
 
 class AutoTranslationConfig(Data):
@@ -164,8 +181,8 @@ def log_request(logger, body, next):
 
 
 @app.event("app_mention")  # ほぼテスト用
-def say_hello(message, say):
-    say(f"こんにちは <@{message['user']}> さん！")
+def say_hello(event, message, say):
+    say(f"こんにちは <@{event['user']}> さん！")
 
 
 @app.event("message")
@@ -200,7 +217,7 @@ def translate_reacted_text(event, say: Say):
 # メンションされた場合に翻訳を行う人物とその言語を設定するshortcutとモーダル
 # この情報はjsonで保存される
 @app.shortcut("automatic_translate_setting")
-def handle_shortcut(ack, body: dict, client: WebClient):
+def handle_automatic_translate_setting_shortcut(ack, body: dict, client: WebClient):
     # ack(acknowledge): slackサーバへの受付を始めたというレスポンス
     # 3秒以内にレスポンスしないとTimeout扱いになる
     ack()
@@ -211,7 +228,7 @@ def handle_shortcut(ack, body: dict, client: WebClient):
 
 
 @app.view(modal.param["auto_translation_config_modal_view"]["callback_id"])
-def handle_view_submission(ack, view, logger):
+def handle_automatic_translate_setting_view_submission(ack, view, logger):
     inputs = view["state"]["values"]
     logger.debug(f'inputs = {view["state"]["values"]}')
     user = inputs.get("user_select", {}
@@ -230,6 +247,7 @@ def handle_view_submission(ack, view, logger):
         ack()
 
     else:
+        # Errorのパターン
         ack(
             response_action="update",
             view=modal.get_error_modal_view(text="Error. Select a user"),
@@ -252,6 +270,31 @@ def auto_translate(message, say, logger):
     target_langs = list(set(target_langs))
 
     translate_and_reply(message=message, say=say, target_langs=target_langs)
+
+# メンションされた場合に翻訳を行う人物とその言語を設定するshortcutとモーダル
+# この情報はjsonで保存される
+
+
+@app.shortcut("translate_ephemeral")
+def handle_translate_ephemeral_shortcut(ack, body: dict, client, logger, payload):
+    # ack(acknowledge): slackサーバへの受付を始めたというレスポンス
+    # 3秒以内にレスポンスしないとTimeout扱いになる
+    ack()
+    logger.debug(f'client = {client}')
+    logger.debug(f'payload = {payload}')
+    client.views_open(
+        trigger_id=body["trigger_id"],
+        view=modal.param["translate_ephemeral_modal_view"],
+    )
+
+
+@app.view(modal.param["translate_ephemeral_modal_view"]["callback_id"])
+def handle_translate_ephemeralg_view_submission(ack, view, logger, payload):
+    inputs = view["state"]["values"]
+    logger.debug(f'inputs = {view["state"]["values"]}')
+    logger.debug(f'payload = {payload}')
+
+    ack()
 
 
 if __name__ == "__main__":

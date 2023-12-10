@@ -6,4 +6,5 @@ COPY Pipfile /app/
 COPY .env /app/
 RUN pipenv install
 COPY slack_translator_bot/ /app/slack_translator_bot/
+COPY templates /app/templates
 CMD ["pipenv", "run", "start"]
