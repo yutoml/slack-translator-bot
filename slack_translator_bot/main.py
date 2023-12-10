@@ -98,8 +98,7 @@ class Modal(StaticData):
         self.param["error_modal_view"]["blocks"][0]["text"]["text"] = text
         return self.param["error_modal_view"]
 
-    @property
-    def translate_ephemeral_modal_view(self) -> dict:
+    def get_translate_ephemeral_modal_view(self, private_metadata: str) -> dict:
         """翻訳先の言語を選択させるmodal_view
 
         Returns
@@ -110,6 +109,7 @@ class Modal(StaticData):
         new_options = [self.get_option(
             config) for config in self.language_config.param["languages"]]
         self.param["translate_ephemeral_modal_view"]["blocks"][0]["element"]["options"] = new_options
+        self.param["translate_ephemeral_modal_view"]["private_metadata"] = private_metadata
         logging.debug(
             f'new_modal = {self.param["translate_ephemeral_modal_view"]}')
         return self.param["translate_ephemeral_modal_view"]
@@ -154,17 +154,8 @@ def translate_and_reply(message: dict, say: Say, target_langs: str | list[str]):
         raise AttributeError("対応外の言語が選択された")
     original_text: str = message["text"]
 
-    # ">"を利用して引用扱い
-    quoted_text = ""
-    for m in original_text.split("\n"):
-        quoted_text += f">{m}\n"
-
-    say_text = quoted_text
-    for target_lang in target_langs:
-        # deeplを利用して翻訳
-        result = translator.translate_text(
-            original_text, target_lang=target_lang)
-        say_text += result.text + "\n"
+    say_text = translate(original_text=original_text,
+                         target_langs=target_langs)
 
     # thread_tsがmessageに含まれていればthread_tsを使用し、なければtsを使用する
     thread_ts = message.get("thread_ts") or message.get("ts")
@@ -172,6 +163,22 @@ def translate_and_reply(message: dict, say: Say, target_langs: str | list[str]):
     # 翻訳元の文章を表示して後から翻訳語の文章を表示する
     say(text=say_text,
         thread_ts=thread_ts)
+
+
+def translate(original_text, target_langs):
+    # ">"を利用して引用扱い
+    quoted_text = ""
+    for m in original_text.split("\n"):
+        quoted_text += f">{m}\n"
+
+    post_text = quoted_text
+    for target_lang in target_langs:
+        # deeplを利用して翻訳
+        result = translator.translate_text(
+            original_text, target_lang=target_lang)
+        post_text += result.text + "\n"
+
+    return post_text
 
 
 @app.middleware
@@ -271,8 +278,8 @@ def auto_translate(message, say, logger):
 
     translate_and_reply(message=message, say=say, target_langs=target_langs)
 
-# メンションされた場合に翻訳を行う人物とその言語を設定するshortcutとモーダル
-# この情報はjsonで保存される
+
+translation_queue = []
 
 
 @app.shortcut("translate_ephemeral")
@@ -282,19 +289,49 @@ def handle_translate_ephemeral_shortcut(ack, body: dict, client, logger, payload
     ack()
     logger.debug(f'client = {client}')
     logger.debug(f'payload = {payload}')
+    translation_queue.append({
+        "trigger_id": body["trigger_id"],
+        "text": payload["message"]["text"],
+        "user": payload["user"],
+        "channel": payload["channel"],
+        "ts": payload["message"]["ts"]
+    })
     client.views_open(
         trigger_id=body["trigger_id"],
-        view=modal.param["translate_ephemeral_modal_view"],
+        view=modal.get_translate_ephemeral_modal_view(
+            private_metadata=body["trigger_id"]),
     )
 
 
 @app.view(modal.param["translate_ephemeral_modal_view"]["callback_id"])
 def handle_translate_ephemeralg_view_submission(ack, view, logger, payload):
-    inputs = view["state"]["values"]
+    inputs: dict = view["state"]["values"]
     logger.debug(f'inputs = {view["state"]["values"]}')
     logger.debug(f'payload = {payload}')
+    target_lang = inputs.get("language_select", {}).get(
+        "static_select-action", {}).get("selected_option", {}).get("value", {})
+    if target_lang == None:
+        logger.debug("Fail to purse")
+        ack(
+            response_action="update",
+            view=modal.get_error_modal_view(
+                text="Error. Empty target language."),
+        )
+    else:
+        private_metadata = payload["private_metadata"]
+        ack()
 
-    ack()
+        translation_ephemeral(target_lang=target_lang,
+                              private_metadata=private_metadata)
+
+
+def translation_ephemeral(target_lang, private_metadata):
+    param = [q for q in translation_queue if q["trigger_id"]
+             == private_metadata][0]
+    post_text = translate(
+        original_text=param["text"], target_langs=[target_lang])
+    app.client.chat_postEphemeral(
+        channel=param["channel"]["id"], user=param["user"]["id"], text=post_text, thread_ts=param["ts"])
 
 
 if __name__ == "__main__":

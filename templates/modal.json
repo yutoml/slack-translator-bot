@@ -119,6 +119,7 @@
         "blocks": [
 		{
 			"type": "input",
+            "block_id": "language_select",
 			"element": {
 				"type": "static_select",
 				"placeholder": {
