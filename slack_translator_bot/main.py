@@ -305,6 +305,7 @@ def handle_translate_ephemeral_shortcut(ack, body: dict, client, logger, payload
 
 @app.view(modal.param["translate_ephemeral_modal_view"]["callback_id"])
 def handle_translate_ephemeralg_view_submission(ack, view, logger, payload):
+    ack()
     inputs: dict = view["state"]["values"]
     logger.debug(f'inputs = {view["state"]["values"]}')
     logger.debug(f'payload = {payload}')
@@ -319,7 +320,6 @@ def handle_translate_ephemeralg_view_submission(ack, view, logger, payload):
         )
     else:
         private_metadata = payload["private_metadata"]
-        ack()
 
         translation_ephemeral(target_lang=target_lang,
                               private_metadata=private_metadata)
