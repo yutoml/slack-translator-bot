@@ -24,9 +24,14 @@ Slack上でdeeplのapiを利用して翻訳をおこなうbot.
     * im:read
     * im:write
     * reactions:read
-  * Eventへの反応を有効化する
-  * ショートカットを作成する.
-    * Globalショートカットを選択し、callback_idは"automatic_translate_setting"とする
+  * Eventへの反応を有効化する(Event Subscription -> Subscribe to bot events)
+    * app_mention
+    * message.channels
+    * message.im
+    * reaction_added
+  * ショートカットを2つ作成する.
+    * Globalショートカットを選択し、callback_idは"automatic_translate_setting"とする. Nameはなんでもよい
+    * Messagesショートカットを選択し、callback_idは"translate_ephemeral"とする.Nameについては同上
   * Install Appを選択してBotのトークンを発行する
 * deepl apiのトークンも発行する
 * .envファイルをDockerfileと同じ階層に作成し、以下のように書き込む
