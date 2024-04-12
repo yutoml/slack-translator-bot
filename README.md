@@ -54,6 +54,10 @@ docker run -it --volume $PWD/data/:/app/data slacktranslatorbot
 templateにあるlanguage_config.jsonをdataディレクトリにコピーして言語とreactionとdeeplで使用される言語コードのセットを変更することで対応する言語を増やしたり、変更したりできる
 モーダルやmentionの挙動もtemplateにあるjsonファイルをdataディレクトリにコピーして編集することで挙動を変えることができる
 
+## logについて
+
+logファイルはdataディレクトリに吐き出されるように設定してある。
+
 ## TODO
 
 * 用語集の対応(主にUIにおいて問題が存在)

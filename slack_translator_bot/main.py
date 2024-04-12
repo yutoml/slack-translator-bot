@@ -5,9 +5,9 @@ from slack_sdk import WebClient
 
 from deepl.translator import Translator
 
+from logging import basicConfig, handlers, getLogger, StreamHandler, DEBUG
 import re
 import os
-import logging
 import json
 
 # Token for Slack Bot
@@ -20,11 +20,23 @@ app = App(token=SLACK_BOT_TOKEN)
 
 translator = Translator(DEEPL_API_TOKEN)
 
-logging.basicConfig(level=logging.DEBUG)
-
-date_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 template_dir = os.path.join(os.path.dirname(
     os.path.dirname(__file__)), "templates")
+
+basicConfig(level=DEBUG)
+logger = getLogger(__name__)
+handler = StreamHandler()
+handler.setLevel(DEBUG)
+logger.setLevel(DEBUG)
+logger.addHandler(handler)
+logger.propagate = False
+rotatingfilehandler = handlers.RotatingFileHandler(
+    os.path.join(data_dir, 'slack-translater-bot.log'),
+    encoding='utf-8',
+    maxBytes=100 * 1024,
+    backupCount=1
+)
 
 
 class StaticData():
@@ -55,8 +67,8 @@ class Data(StaticData):
 
 class LanguageConfig(StaticData):
     def __init__(self) -> None:
-        if os.path.isfile(os.path.join(date_dir, "language_config.json")):
-            source_path = os.path.join(date_dir, "language_config.json")
+        if os.path.isfile(os.path.join(data_dir, "language_config.json")):
+            source_path = os.path.join(data_dir, "language_config.json")
         else:
             source_path = os.path.join(template_dir, "language_config.json")
         super().__init__(source_path)
@@ -75,8 +87,8 @@ class LanguageConfig(StaticData):
 class Modal(StaticData):
     def __init__(self, language_config: LanguageConfig) -> None:
         self.language_config: LanguageConfig = language_config
-        if os.path.isfile(os.path.join(date_dir, "modal.json")):
-            source_path = os.path.join(date_dir, "modal.json")
+        if os.path.isfile(os.path.join(data_dir, "modal.json")):
+            source_path = os.path.join(data_dir, "modal.json")
         else:
             source_path = os.path.join(template_dir, "modal.json")
         super().__init__(source_path)
@@ -110,17 +122,17 @@ class Modal(StaticData):
             config) for config in self.language_config.param["languages"]]
         self.param["translate_ephemeral_modal_view"]["blocks"][0]["element"]["options"] = new_options
         self.param["translate_ephemeral_modal_view"]["private_metadata"] = private_metadata
-        logging.debug(
+        logger.debug(
             f'new_modal = {self.param["translate_ephemeral_modal_view"]}')
         return self.param["translate_ephemeral_modal_view"]
 
 
 class AutoTranslationConfig(Data):
     def __init__(self) -> None:
-        export_path = os.path.join(date_dir, "auto_translation_config.json")
-        if os.path.isfile(os.path.join(date_dir, "auto_translation_config.json")):
+        export_path = os.path.join(data_dir, "auto_translation_config.json")
+        if os.path.isfile(os.path.join(data_dir, "auto_translation_config.json")):
             source_path = os.path.join(
-                date_dir, "auto_translation_config.json")
+                data_dir, "auto_translation_config.json")
         else:
             source_path = os.path.join(
                 template_dir, "auto_translation_config.json")
@@ -183,24 +195,32 @@ def translate(original_text, target_langs):
 
 @app.middleware
 def log_request(logger, body, next):
-    logger.debug(body)
+    logger.debug(f"middleware.log_request: body = {body}")
     return next()
 
 
 @app.event("app_mention")  # ほぼテスト用
-def say_hello(event, message, say):
+def say_hello(event, message, say, logger):
+    logger.info("event: app_mention")
+    logger.debug(f"event = {event}")
     say(f"こんにちは <@{event['user']}> さん！")
 
 
 @app.event("message")
 def message_event(event, message, say, logger):
+    logger.info("event: message")
+    logger.debug(f"event = {event}")
+    logger.debug(f"message = {event}")
+
     # ある特定のメンションに対して翻訳を実行する
     if re.search(auto_translation_config.mention_pattern, message["text"]):
         auto_translate(message, say, logger)
 
 
 @app.event("reaction_added")
-def translate_reacted_text(event, say: Say):
+def translate_reacted_text(event, say: Say, logger):
+    logger.info("event: reaction_added")
+    logger.debug(f"event = {event}")
 
     if not event["reaction"] in language_config.reaction_to_language:
         return
@@ -224,10 +244,12 @@ def translate_reacted_text(event, say: Say):
 # メンションされた場合に翻訳を行う人物とその言語を設定するshortcutとモーダル
 # この情報はjsonで保存される
 @app.shortcut("automatic_translate_setting")
-def handle_automatic_translate_setting_shortcut(ack, body: dict, client: WebClient):
+def handle_automatic_translate_setting_shortcut(ack, body: dict, client: WebClient, logger):
     # ack(acknowledge): slackサーバへの受付を始めたというレスポンス
     # 3秒以内にレスポンスしないとTimeout扱いになる
     ack()
+    logger.info("shortcut start: automatic_translate_setting")
+    logger.debug(f"body = {body}")
     client.views_open(
         trigger_id=body["trigger_id"],
         view=modal.auto_translation_config_modal_view,
@@ -287,8 +309,10 @@ def handle_translate_ephemeral_shortcut(ack, body: dict, client, logger, payload
     # ack(acknowledge): slackサーバへの受付を始めたというレスポンス
     # 3秒以内にレスポンスしないとTimeout扱いになる
     ack()
+    logger.info('shortcut start: translate_ephemeral')
     logger.debug(f'client = {client}')
     logger.debug(f'payload = {payload}')
+    logger.debug(f'body = {body}')
     translation_queue.append({
         "trigger_id": body["trigger_id"],
         "text": payload["message"]["text"],
