@@ -350,12 +350,17 @@ def handle_translate_ephemeralg_view_submission(ack, view, logger, payload):
 
 
 def translation_ephemeral(target_lang, private_metadata):
+    logger.info("func: translation_ephemeral")
+    logger.debug(f"target_lang: {target_lang}")
+    logger.debug(f"private_metadata: {private_metadata}")
     param = [q for q in translation_queue if q["trigger_id"]
              == private_metadata][0]
     post_text = translate(
         original_text=param["text"], target_langs=[target_lang])
+    # app.client.chat_postEphemeral(
+    #    channel=param["channel"]["id"], user=param["user"]["id"], text=post_text, thread_ts=param["ts"])
     app.client.chat_postEphemeral(
-        channel=param["channel"]["id"], user=param["user"]["id"], text=post_text, thread_ts=param["ts"])
+        channel=param["channel"]["id"], user=param["user"]["id"], text=post_text)
 
 
 if __name__ == "__main__":
