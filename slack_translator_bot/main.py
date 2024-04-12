@@ -357,8 +357,11 @@ def translation_ephemeral(target_lang, private_metadata):
              == private_metadata][0]
     post_text = translate(
         original_text=param["text"], target_langs=[target_lang])
+
+    # スレッドに投稿する場合はこちらのコメントアウトをはずし、下をコメントアウトする
     # app.client.chat_postEphemeral(
     #    channel=param["channel"]["id"], user=param["user"]["id"], text=post_text, thread_ts=param["ts"])
+
     app.client.chat_postEphemeral(
         channel=param["channel"]["id"], user=param["user"]["id"], text=post_text)
 
