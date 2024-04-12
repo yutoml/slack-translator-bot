@@ -24,7 +24,8 @@ data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 template_dir = os.path.join(os.path.dirname(
     os.path.dirname(__file__)), "templates")
 
-basicConfig(level=DEBUG)
+basicConfig(level=DEBUG, filename=os.path.join(
+    data_dir, 'slack-translater-bot.main.log.'))
 logger = getLogger(__name__)
 handler = StreamHandler()
 handler.setLevel(DEBUG)
